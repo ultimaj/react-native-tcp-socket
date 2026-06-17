@@ -232,7 +232,7 @@ export default class Server extends EventEmitter {
 
     /**
      * @protected
-     * @param {{ id: number; connection: import('./Socket').NativeConnectionInfo; }} info
+     * @param {{ id: string; connection: import('./Socket').NativeConnectionInfo; }} info
      * @returns {Socket}
      */
     _buildSocket(info) {

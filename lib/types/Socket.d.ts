@@ -38,7 +38,7 @@
  */
 export default class Socket extends EventEmitter<SocketEvents & ReadableEvents, any> {
     /** @package */
-    _id: number;
+    _id: string;
     /** @private */
     private _eventEmitter;
     /** @type {EventEmitter<'written', any>} @private */
@@ -93,9 +93,9 @@ export default class Socket extends EventEmitter<SocketEvents & ReadableEvents, 
     get timeout(): number | undefined;
     /**
      * @package
-     * @param {number} id
+     * @param {string} id
      */
-    _setId(id: number): void;
+    _setId(id: string): void;
     /**
      * @package
      * @param {NativeConnectionInfo} connectionInfo

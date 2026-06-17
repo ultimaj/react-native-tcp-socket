@@ -12,18 +12,18 @@ import java.security.GeneralSecurityException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.UUID;
 
 import javax.net.ssl.SSLServerSocketFactory;
 
 public final class TcpSocketServer extends TcpSocket {
     private final TcpEventListener mReceiverListener;
     private final ExecutorService listenExecutor;
-    private final ConcurrentHashMap<Integer, TcpSocket> socketClients;
+    private final ConcurrentHashMap<String, TcpSocket> socketClients;
     private final boolean isTLS;
     private ServerSocket serverSocket;
-    private int clientSocketIds;
 
-    public TcpSocketServer(final Context context, final ConcurrentHashMap<Integer, TcpSocket> socketClients, final TcpEventListener receiverListener, final Integer id,
+    public TcpSocketServer(final Context context, final ConcurrentHashMap<String, TcpSocket> socketClients, final TcpEventListener receiverListener, final String id,
                            final ReadableMap options) throws IOException, GeneralSecurityException {
         super(id);
         listenExecutor = Executors.newSingleThreadExecutor();
@@ -31,7 +31,6 @@ public final class TcpSocketServer extends TcpSocket {
         int port = options.getInt("port");
         String address = options.getString("host");
         this.socketClients = socketClients;
-        clientSocketIds = (1 + getId()) * 1000;
         // Get the addresses
         InetAddress localInetAddress = InetAddress.getByName(address);
         // Create the socket
@@ -67,7 +66,7 @@ public final class TcpSocketServer extends TcpSocket {
     }
 
     private void addClient(Socket socket) {
-        int clientId = getClientId();
+        String clientId = getClientId();
         TcpSocketClient socketClient = new TcpSocketClient(mReceiverListener, clientId, socket);
         socketClients.put(clientId, socketClient);
         if (isTLS) {
@@ -79,12 +78,12 @@ public final class TcpSocketServer extends TcpSocket {
     }
 
     /**
-     * Next ID for a client socket
+     * String object representing UUID for a client socket
      *
-     * @return The next ID for a client socket
+     * @return String object representing UUID for a client socket
      */
-    private int getClientId() {
-        return clientSocketIds++;
+    private String getClientId() {
+        return UUID.randomUUID().toString();
     }
 
     private void listen() {

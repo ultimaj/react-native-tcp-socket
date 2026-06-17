@@ -1,13 +1,13 @@
 package com.asterinet.react.tcpsocket;
 
 public class TcpSocket {
-    private final int id;
+    private final String id;
 
-    public TcpSocket(final int id) {
+    public TcpSocket(final String id) {
         this.id = id;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 }

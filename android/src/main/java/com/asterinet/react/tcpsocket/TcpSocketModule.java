@@ -45,8 +45,8 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
     public static final String TAG = "TcpSockets";
     private static final int N_THREADS = 2;
     private final ReactApplicationContext mReactContext;
-    private final ConcurrentHashMap<Integer, TcpSocket> socketMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Integer, ReadableMap> pendingTLS = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, TcpSocket> socketMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ReadableMap> pendingTLS = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Network> mNetworkMap = new ConcurrentHashMap<>();
     private final CurrentNetwork currentNetwork = new CurrentNetwork();
     private final ExecutorService executorService = Executors.newFixedThreadPool(N_THREADS);
@@ -80,7 +80,7 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
     @SuppressLint("StaticFieldLeak")
     @SuppressWarnings("unused")
     @ReactMethod
-    public void connect(@NonNull final Integer cId, @NonNull final String host, @NonNull final Integer port, @NonNull final ReadableMap options) {
+    public void connect(@NonNull final String cId, @NonNull final String host, @NonNull final Integer port, @NonNull final ReadableMap options) {
         executorService.execute(new Runnable() {
             @Override
             public void run() {
@@ -110,7 +110,7 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
     @SuppressLint("StaticFieldLeak")
     @SuppressWarnings("unused")
     @ReactMethod
-    public void startTLS(final int cId, @NonNull final ReadableMap tlsOptions) {
+    public void startTLS(final String cId, @NonNull final ReadableMap tlsOptions) {
         TcpSocketClient socketClient = (TcpSocketClient) socketMap.get(cId);
         // Not yet connected
         if (socketClient == null) {
@@ -127,7 +127,7 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
     @SuppressLint("StaticFieldLeak")
     @SuppressWarnings("unused")
     @ReactMethod
-    public void write(final int cId, @NonNull final String base64String, final int msgId) {
+    public void write(final String cId, @NonNull final String base64String, final int msgId) {
         TcpSocketClient socketClient = getTcpClient(cId);
         byte[] data = Base64.decode(base64String, Base64.NO_WRAP);
         socketClient.write(msgId, data);
@@ -136,25 +136,30 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
     @SuppressLint("StaticFieldLeak")
     @SuppressWarnings("unused")
     @ReactMethod
-    public void end(final Integer cId) {
+    public void end(final String cId) {
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-                TcpSocketClient socketClient = getTcpClient(cId);
-                socketClient.destroy();
+                try {
+                    TcpSocketClient socketClient = getTcpClient(cId);
+                    socketClient.destroy();
+                    socketMap.remove(cId);
+                } catch (IllegalArgumentException e) {
+                    tcpEvtListener.onError(cId, e);
+                }
             }
         });
     }
 
     @SuppressWarnings("unused")
     @ReactMethod
-    public void destroy(final Integer cId) {
+    public void destroy(final String cId) {
         end(cId);
     }
 
     @SuppressWarnings("unused")
     @ReactMethod
-    public void close(final Integer cId) {
+    public void close(final String cId) {
         executorService.execute(new Runnable() {
             @Override
             public void run() {
@@ -168,7 +173,7 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
     @SuppressLint("StaticFieldLeak")
     @SuppressWarnings("unused")
     @ReactMethod
-    public void listen(final Integer cId, final ReadableMap options) {
+    public void listen(final String cId, final ReadableMap options) {
         executorService.execute(new Runnable() {
             @Override
             public void run() {
@@ -185,7 +190,7 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
 
     @SuppressWarnings("unused")
     @ReactMethod
-    public void setNoDelay(@NonNull final Integer cId, final boolean noDelay) {
+    public void setNoDelay(@NonNull final String cId, final boolean noDelay) {
         final TcpSocketClient client = getTcpClient(cId);
         try {
             client.setNoDelay(noDelay);
@@ -196,7 +201,7 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
 
     @SuppressWarnings("unused")
     @ReactMethod
-    public void setKeepAlive(@NonNull final Integer cId, final boolean enable, final int initialDelay) {
+    public void setKeepAlive(@NonNull final String cId, final boolean enable, final int initialDelay) {
         final TcpSocketClient client = getTcpClient(cId);
         try {
             client.setKeepAlive(enable, initialDelay);
@@ -207,14 +212,14 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
 
     @SuppressWarnings("unused")
     @ReactMethod
-    public void pause(final int cId) {
+    public void pause(final String cId) {
         TcpSocketClient client = getTcpClient(cId);
         client.pause();
     }
 
     @SuppressWarnings("unused")
     @ReactMethod
-    public void resume(final int cId) {
+    public void resume(final String cId) {
         TcpSocketClient client = getTcpClient(cId);
         client.resume();
     }
@@ -450,7 +455,7 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
             mNetworkMap.put(iface + ipAddress, currentNetwork.getNetwork());
     }
 
-    private TcpSocketClient getTcpClient(final int id) {
+    private TcpSocketClient getTcpClient(final String id) {
         TcpSocket socket = socketMap.get(id);
         if (socket == null) {
             throw new IllegalArgumentException("No socket with id " + id);
@@ -461,7 +466,7 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
         return (TcpSocketClient) socket;
     }
 
-    private TcpSocketServer getTcpServer(final int id) {
+    private TcpSocketServer getTcpServer(final String id) {
         TcpSocket socket = socketMap.get(id);
         if (socket == null) {
             throw new IllegalArgumentException("No server socket with id " + id);
@@ -484,7 +489,7 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
 
     @SuppressWarnings("unused")
     @ReactMethod
-    public void getPeerCertificate(final int cId, Promise promise) {
+    public void getPeerCertificate(final String cId, Promise promise) {
         try {
             final TcpSocketClient client = getTcpClient(cId);
             promise.resolve(client.getPeerCertificate());
@@ -495,7 +500,7 @@ public class TcpSocketModule extends ReactContextBaseJavaModule {
 
     @SuppressWarnings("unused")
     @ReactMethod
-    public void getCertificate(final int cId, Promise promise) {
+    public void getCertificate(final String cId, Promise promise) {
         try {
             final TcpSocketClient client = getTcpClient(cId);
             promise.resolve(client.getCertificate());

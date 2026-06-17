@@ -86,7 +86,7 @@ export default class Socket extends EventEmitter {
         // TODO: Add readOnly and writeOnly states
         /** @type {'opening' | 'open' | 'readOnly' | 'writeOnly'} @private */
         this._readyState = 'open'; // Incorrect, but matches NodeJS behavior
-        /** @type {{ id: number; data: string; }[]} @private */
+        /** @type {{ id: string; data: string; }[]} @private */
         this._pausedDataEvents = [];
         this.readableHighWaterMark = 16384;
         this.writableHighWaterMark = 16384;
@@ -130,7 +130,7 @@ export default class Socket extends EventEmitter {
 
     /**
      * @package
-     * @param {number} id
+     * @param {string} id
      */
     _setId(id) {
         this._id = id;
@@ -341,7 +341,7 @@ export default class Socket extends EventEmitter {
         this._writeBufferSize += generatedBuffer.byteLength;
         const currentMsgId = this._msgId;
         this._msgId = (this._msgId + 1) % Number.MAX_SAFE_INTEGER;
-        const msgEvtHandler = (/** @type {{id: number, msgId: number, err?: string}} */ evt) => {
+        const msgEvtHandler = (/** @type {{id: string, msgId: number, err?: string}} */ evt) => {
             const { msgId, err } = evt;
             if (msgId === currentMsgId) {
                 this._msgEvtEmitter.removeListener('written', msgEvtHandler);
@@ -440,7 +440,7 @@ export default class Socket extends EventEmitter {
     /**
      * @private
      */
-    _onDeviceDataEvt = (/** @type {{ id: number; data: string; }} */ evt) => {
+    _onDeviceDataEvt = (/** @type {{ id: string; data: string; }} */ evt) => {
         if (evt.id !== this._id) return;
         this._resetTimeout();
         if (!this._paused) {

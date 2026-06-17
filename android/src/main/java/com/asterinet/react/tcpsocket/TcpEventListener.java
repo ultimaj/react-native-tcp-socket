@@ -24,20 +24,20 @@ public class TcpEventListener {
         rctEvtEmitter = reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
     }
 
-    public void onConnection(int serverId, int clientId, Socket socket) {
+    public void onConnection(String serverId, String clientId, Socket socket) {
         onSocketConnection("connection", serverId, clientId, socket);
     }
 
-    public void onSecureConnection(int serverId, int clientId, Socket socket) {
+    public void onSecureConnection(String serverId, String clientId, Socket socket) {
         onSocketConnection("secureConnection", serverId, clientId, socket);
     }
 
-    private void onSocketConnection(String connectionType, int serverId, int clientId, Socket socket) {
+    private void onSocketConnection(String connectionType, String serverId, String clientId, Socket socket) {
         WritableMap eventParams = Arguments.createMap();
-        eventParams.putInt("id", serverId);
+        eventParams.putString("id", serverId);
 
         WritableMap infoParams = Arguments.createMap();
-        infoParams.putInt("id", clientId);
+        infoParams.putString("id", clientId);
 
         WritableMap connectionParams = Arguments.createMap();
         InetSocketAddress remoteAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
@@ -54,9 +54,9 @@ public class TcpEventListener {
         sendEvent(connectionType, eventParams);
     }
 
-    public void onConnect(int id, TcpSocketClient client) {
+    public void onConnect(String id, TcpSocketClient client) {
         WritableMap eventParams = Arguments.createMap();
-        eventParams.putInt("id", id);
+        eventParams.putString("id", id);
         WritableMap connectionParams = Arguments.createMap();
         Socket socket = client.getSocket();
         InetSocketAddress remoteAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
@@ -70,9 +70,9 @@ public class TcpEventListener {
         sendEvent("connect", eventParams);
     }
 
-    public void onListen(int id, TcpSocketServer server) {
+    public void onListen(String id, TcpSocketServer server) {
         WritableMap eventParams = Arguments.createMap();
-        eventParams.putInt("id", id);
+        eventParams.putString("id", id);
         WritableMap connectionParams = Arguments.createMap();
         ServerSocket serverSocket = server.getServerSocket();
         InetAddress address = serverSocket.getInetAddress();
@@ -84,50 +84,50 @@ public class TcpEventListener {
         sendEvent("listening", eventParams);
     }
 
-    public void onData(int id, byte[] data) {
+    public void onData(String id, byte[] data) {
         WritableMap eventParams = Arguments.createMap();
-        eventParams.putInt("id", id);
+        eventParams.putString("id", id);
         eventParams.putString("data", Base64.encodeToString(data, Base64.NO_WRAP));
 
         sendEvent("data", eventParams);
     }
 
-    public void onEnd(int id) {
+    public void onEnd(String id) {
         WritableMap eventParams = Arguments.createMap();
-        eventParams.putInt("id", id);
+        eventParams.putString("id", id);
         sendEvent("end", eventParams);
     }
 
-    public void onWritten(int id, int msgId, @Nullable Exception e) {
+    public void onWritten(String id, int msgId, @Nullable Exception e) {
         String error = null;
         if (e != null) {
             Log.e(TcpSocketModule.TAG, "Exception on socket " + id, e);
             error = e.getMessage();
         }
         WritableMap eventParams = Arguments.createMap();
-        eventParams.putInt("id", id);
+        eventParams.putString("id", id);
         eventParams.putInt("msgId", msgId);
         eventParams.putString("err", error);
 
         sendEvent("written", eventParams);
     }
 
-    public void onClose(int id, Exception e) {
+    public void onClose(String id, Exception e) {
         if (e != null) {
             onError(id, e);
         }
         WritableMap eventParams = Arguments.createMap();
-        eventParams.putInt("id", id);
+        eventParams.putString("id", id);
         eventParams.putBoolean("hadError", e != null);
 
         sendEvent("close", eventParams);
     }
 
-    public void onError(int id, Exception e) {
+    public void onError(String id, Exception e) {
         Log.e(TcpSocketModule.TAG, "Exception on socket " + id, e);
         String error = e.getMessage();
         WritableMap eventParams = Arguments.createMap();
-        eventParams.putInt("id", id);
+        eventParams.putString("id", id);
         eventParams.putString("error", error);
 
         sendEvent("error", eventParams);

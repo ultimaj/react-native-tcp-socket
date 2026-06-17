@@ -24,7 +24,7 @@ export default class Server extends EventEmitter<ServerEvents, any> {
      */
     constructor(options?: ServerOptions | ((socket: Socket) => void) | undefined, connectionCallback?: ((socket: Socket) => void) | undefined);
     /** @protected @readonly */
-    protected readonly _id: number;
+    protected readonly _id: string;
     /** @protected @readonly */
     protected readonly _eventEmitter: import("react-native").EventEmitter;
     /** @private @type {Set<Socket>} */
@@ -105,11 +105,11 @@ export default class Server extends EventEmitter<ServerEvents, any> {
     protected _addConnection(socket: Socket): void;
     /**
      * @protected
-     * @param {{ id: number; connection: import('./Socket').NativeConnectionInfo; }} info
+     * @param {{ id: string; connection: import('./Socket').NativeConnectionInfo; }} info
      * @returns {Socket}
      */
     protected _buildSocket(info: {
-        id: number;
+        id: string;
         connection: import('./Socket').NativeConnectionInfo;
     }): Socket;
     /**

@@ -27,7 +27,7 @@ class TcpSocketClient extends TcpSocket {
     private Socket socket;
     private boolean closed = true;
 
-    TcpSocketClient(TcpEventListener receiverListener, Integer id, Socket socket) {
+    TcpSocketClient(TcpEventListener receiverListener, String id, Socket socket) {
         super(id);
         listenExecutor = Executors.newSingleThreadExecutor();
         writeExecutor = Executors.newSingleThreadExecutor();
@@ -249,7 +249,7 @@ class TcpSocketClient extends TcpSocket {
          */
         @Override
         public void run() {
-            int socketId = clientSocket.getId();
+            String socketId = clientSocket.getId();
             Socket socket = clientSocket.getSocket();
 
             // Guard against null socket - can happen if destroy() is called
